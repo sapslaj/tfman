@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+# Show documentation for Terraform resource or datasource in the terminal
+import sys
+from typing import Callable
+import requests
+import re
+import webbrowser
+import urllib.parse
+from rich.console import Console
+from rich.markdown import Markdown
+
+# Shortcut types
+#   a -
+#   b -
+#   c -
+#   d - data source
+#   e - expression
+#   f - function
+#   g - google
+#   h -
+#   i -
+#   j -
+#   k -
+#   l -
+#   m - meta-arguments
+#   n -
+#   o -
+#   p -
+#   q -
+#   r - resource
+#   s -
+#   t -
+#   u -
+#   v -
+#   w -
+#   x -
+#   y -
+#   z -
+
+
+def _lookup_provider_official(provider: str, ghorg: str = "hashicorp", ghbranch: str = "main", file_extension: str = ".html.markdown") -> Callable[[str, str], str]:
+    def lookup(thing_type: str, thing: str) -> str:
+        thing_type = thing_type[0].lower()
+        response = requests.get(
+            f"https://raw.githubusercontent.com/{ghorg}/terraform-provider-{provider}/{ghbranch}/website/docs/{thing_type}/{thing}{file_extension}"
+        )
+        return response.text
+    return lookup
+
+def _lookup_provider_official_legacy(provider: str, ghorg: str = "hashicorp", ghbranch: str = "main") -> Callable[[str, str], str]:
+    def lookup(thing_type: str, thing: str) -> str:
+        thing_path = {
+            "r": "resources",
+            "d": "data-sources",
+        }.get(thing_type[0].lower())
+        response = requests.get(
+            f"https://raw.githubusercontent.com/{ghorg}/terraform-provider-{provider}/{ghbranch}/website/docs/{thing_path}/{thing}.md"
+        )
+        return response.text
+    return lookup
+
+def _lookup_platform(doc_path: str, ghbranch: str = "main") -> Callable[[str, str], str]:
+    def lookup(thing: str) -> str:
+        response = requests.get(
+            f"https://raw.githubusercontent.com/hashicorp/terraform/{ghbranch}/website/docs/{doc_path}/{thing}.mdx"
+        )
+        return response.text
+    return lookup
+
+lookup_provider_functions = {
+    "aws": _lookup_provider_official(provider="aws"),
+    "datadog": _lookup_provider_official_legacy(provider="datadog", ghorg="DataDog", ghbranch="master"),
+    "github": _lookup_provider_official(provider="github", ghorg="integrations"),
+    "helm": _lookup_provider_official(provider="helm"),
+    "kubernetes": _lookup_provider_official(provider="kubernetes"),
+    "lacework": _lookup_provider_official(provider="lacework", ghorg="lacework"),
+    "local": _lookup_provider_official(provider="local", file_extension=".html.md"),
+    "netbox": _lookup_provider_official(provider="netbox", ghorg="e-breuninger", ghbranch="master"),
+    "null": _lookup_provider_official_legacy(provider="null"),
+    "random": _lookup_provider_official_legacy(provider="random"),
+    "tfe": _lookup_provider_official(provider="tfe"),
+}
+
+lookup_platform_functions = {
+    "e": _lookup_platform(doc_path="language/expressions"),
+    "f": _lookup_platform(doc_path="language/functions"),
+    "m": _lookup_platform(doc_path="language/meta-arguments"),
+}
+
+def main():
+    console = Console(color_system="256")
+    if "-h" in sys.argv:
+        console.print("Usage: tfdoc {type} {thing}")
+        console.print("  Example: tfdoc r aws_instance")
+        sys.exit(0)
+    use_pager = False
+    if "-p" in sys.argv:
+        use_pager = True
+    full_name = sys.argv[-1]
+    thing_type = sys.argv[-2]
+    short_thing_type = thing_type[0]
+    if short_thing_type in ("g"):
+        q = f"terraform {full_name}"
+        console.print(f'Googling "{q}"...')
+        webbrowser.open(f"https://google.com/search?q={urllib.parse.quote_plus(q)}")
+        sys.exit(0)
+    elif short_thing_type in ("d", "r"):
+        provider, thing = re.findall(r"(\w+?)_(.*)", full_name)[0]
+        lookup_function = lookup_provider_functions.get(provider, None)
+        if lookup_function == None:
+            raise Exception(f"Provider {provider} not supported.")
+        doc = lookup_function(thing_type=thing_type, thing=thing)
+    elif short_thing_type in lookup_platform_functions.keys():
+        lookup_function = lookup_platform_functions.get(short_thing_type, None)
+        if lookup_function == None:
+            raise Exception(f"Platform type {thing_type} not supported.")
+        doc = lookup_function(thing=full_name)
+    else:
+        raise Exception(f"dunno what {thing_type} is")
+    md = Markdown(doc)
+    if use_pager:
+        with console.pager():
+            console.print(md)
+    else:
+        console.print(md)
+
+
+if __name__ == "__main__":
+    main()
