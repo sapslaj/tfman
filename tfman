@@ -61,6 +61,11 @@ def _lookup_provider_official_legacy(provider: str, ghorg: str = "hashicorp", gh
 
 def _lookup_platform(doc_path: str, ghbranch: str = "main") -> Callable[[str, str], str]:
     def lookup(thing: str) -> str:
+        if not thing:
+            thing = "index"
+        # hacky special case for `index` function
+        if doc_path == "language/functions" and thing == "index":
+            thing = "index_function"
         response = requests.get(
             f"https://raw.githubusercontent.com/hashicorp/terraform/{ghbranch}/website/docs/{doc_path}/{thing}.mdx"
         )
