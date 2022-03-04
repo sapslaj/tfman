@@ -95,8 +95,8 @@ lookup_platform_functions = {
 def main():
     console = Console(color_system="256")
     if "-h" in sys.argv:
-        console.print("Usage: tfdoc {type} {thing}")
-        console.print("  Example: tfdoc r aws_instance")
+        console.print("Usage: tfman {type} {thing}")
+        console.print("  Example: tfman r aws_instance")
         sys.exit(0)
     use_pager = False
     if "-p" in sys.argv:
