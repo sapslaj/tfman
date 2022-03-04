@@ -2,6 +2,17 @@
 
 (currently PoC) of console documentation for Terraform
 
+## Installation
+
+sorry for not packaging this up all neatly
+
+```shell
+git clone https://github.com/sapslaj/tfman
+cd tfman
+pip install -r requirements.txt
+ln -s ./tfman ~/.local/bin/tfman
+```
+
 ## Usage
 
 ```shell
