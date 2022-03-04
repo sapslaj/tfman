@@ -38,28 +38,77 @@ from rich.markdown import Markdown
 #   z -
 
 
-def _lookup_provider_official(provider: str, ghorg: str = "hashicorp", ghbranch: str = "main", file_extension: str = ".html.markdown") -> Callable[[str, str], str]:
+def build_url(*parts):
+    return f"https://{'/'.join(parts)}"
+
+
+def _lookup_direct(*url_parts: list[str]) -> Callable[[str, str], str]:
+    def lookup(*_) -> str:
+        response = requests.get(build_url(*url_parts))
+        response.raise_for_status()
+        return response.text
+
+    return lookup
+
+
+def _lookup_provider_official(
+    provider: str,
+    ghorg: str = "hashicorp",
+    ghbranch: str = "main",
+    subdir: str = "website/docs",
+    thing_prefix: str = "",
+    file_extension: str = ".html.markdown",
+) -> Callable[[str, str], str]:
     def lookup(thing_type: str, thing: str) -> str:
         thing_type = thing_type[0].lower()
         response = requests.get(
-            f"https://raw.githubusercontent.com/{ghorg}/terraform-provider-{provider}/{ghbranch}/website/docs/{thing_type}/{thing}{file_extension}"
+            build_url(
+                "raw.githubusercontent.com",
+                ghorg,
+                f"terraform-provider-{provider}",
+                ghbranch,
+                subdir,
+                thing_type,
+                f"{thing_prefix}{thing}{file_extension}",
+            )
         )
+        response.raise_for_status()
         return response.text
+
     return lookup
 
-def _lookup_provider_official_legacy(provider: str, ghorg: str = "hashicorp", ghbranch: str = "main") -> Callable[[str, str], str]:
+
+def _lookup_provider_official_legacy(
+    provider: str,
+    ghorg: str = "hashicorp",
+    ghbranch: str = "main",
+    subdir: str = "website/docs",
+    thing_prefix: str = "",
+    file_extension: str = ".md",
+) -> Callable[[str, str], str]:
     def lookup(thing_type: str, thing: str) -> str:
         thing_path = {
             "r": "resources",
             "d": "data-sources",
         }.get(thing_type[0].lower())
         response = requests.get(
-            f"https://raw.githubusercontent.com/{ghorg}/terraform-provider-{provider}/{ghbranch}/website/docs/{thing_path}/{thing}.md"
+            build_url(
+                "raw.githubusercontent.com",
+                ghorg,
+                f"terraform-provider-{provider}",
+                ghbranch,
+                subdir,
+                thing_path,
+                f"{thing_prefix}{thing}{file_extension}",
+            )
         )
+        response.raise_for_status()
         return response.text
+
     return lookup
 
-def _lookup_platform(doc_path: str, ghbranch: str = "main") -> Callable[[str, str], str]:
+
+def _lookup_platform(doc_path: str, ghbranch: str = "main", subdir: str = "website/docs") -> Callable[[str, str], str]:
     def lookup(thing: str) -> str:
         if not thing:
             thing = "index"
@@ -67,23 +116,57 @@ def _lookup_platform(doc_path: str, ghbranch: str = "main") -> Callable[[str, st
         if doc_path == "language/functions" and thing == "index":
             thing = "index_function"
         response = requests.get(
-            f"https://raw.githubusercontent.com/hashicorp/terraform/{ghbranch}/website/docs/{doc_path}/{thing}.mdx"
+            f"https://raw.githubusercontent.com/hashicorp/terraform/{ghbranch}/{subdir}/{doc_path}/{thing}.mdx"
         )
+        response.raise_for_status()
         return response.text
+
     return lookup
 
+
+lookup_special_provider_functions = {
+    "external": _lookup_direct(
+        "raw.githubusercontent.com",
+        "hashicorp",
+        "terraform-provider-external",
+        "main",
+        "website",
+        "docs",
+        "data_source.html.md",
+    ),
+    "http": _lookup_direct(
+        "raw.githubusercontent.com",
+        "hashicorp",
+        "terraform-provider-http",
+        "main",
+        "docs",
+        "data-sources",
+        "http.md",
+    ),
+}
+
 lookup_provider_functions = {
+    "ad": _lookup_provider_official_legacy(provider="ad", subdir="docs"),
+    "alicloud": _lookup_provider_official(provider="alicloud", ghorg="aliyun", ghbranch="master"),
     "aws": _lookup_provider_official(provider="aws"),
-    "datadog": _lookup_provider_official_legacy(provider="datadog", ghorg="DataDog", ghbranch="master"),
+    "azurerm": _lookup_provider_official(provider="azurerm"),
+    "cloudinit": _lookup_provider_official(provider="cloudinit", thing_prefix="cloudinit_"),
+    "datadog": _lookup_provider_official_legacy(provider="datadog", ghorg="DataDog", ghbranch="master", subdir="docs"),
+    "dns": _lookup_provider_official(provider="dns", thing_prefix="dns_"),
     "github": _lookup_provider_official(provider="github", ghorg="integrations"),
+    "google": _lookup_provider_official(provider="google"),
     "helm": _lookup_provider_official(provider="helm"),
     "kubernetes": _lookup_provider_official(provider="kubernetes"),
     "lacework": _lookup_provider_official(provider="lacework", ghorg="lacework"),
     "local": _lookup_provider_official(provider="local", file_extension=".html.md"),
-    "netbox": _lookup_provider_official(provider="netbox", ghorg="e-breuninger", ghbranch="master"),
-    "null": _lookup_provider_official_legacy(provider="null"),
-    "random": _lookup_provider_official_legacy(provider="random"),
+    "netbox": _lookup_provider_official(provider="netbox", ghorg="e-breuninger", ghbranch="master", file_extension=".md"),
+    "null": _lookup_provider_official_legacy(provider="null", subdir="docs"),
+    "oci": _lookup_provider_official(provider="oci", ghorg="terraform-providers", ghbranch="master"),
+    "random": _lookup_provider_official_legacy(provider="random", subdir="docs"),
     "tfe": _lookup_provider_official(provider="tfe"),
+    "time": _lookup_provider_official(provider="time"),
+    "tls": _lookup_provider_official(provider="tls", file_extension=".html.md"),
+    "vault": _lookup_provider_official(provider="vault", file_extension=".html.md"),
 }
 
 lookup_platform_functions = {
@@ -91,6 +174,7 @@ lookup_platform_functions = {
     "f": _lookup_platform(doc_path="language/functions"),
     "m": _lookup_platform(doc_path="language/meta-arguments"),
 }
+
 
 def main():
     console = Console(color_system="256")
@@ -110,11 +194,16 @@ def main():
         webbrowser.open(f"https://google.com/search?q={urllib.parse.quote_plus(q)}")
         sys.exit(0)
     elif short_thing_type in ("d", "r"):
-        provider, thing = re.findall(r"(\w+?)_(.*)", full_name)[0]
-        lookup_function = lookup_provider_functions.get(provider, None)
-        if lookup_function == None:
-            raise Exception(f"Provider {provider} not supported.")
-        doc = lookup_function(thing_type=thing_type, thing=thing)
+        # Some special cases
+        if full_name in lookup_special_provider_functions.keys():
+            lookup_function = lookup_special_provider_functions.get(full_name)
+            doc = lookup_function()
+        else:
+            provider, thing = re.findall(r"(\w+?)_(.*)", full_name)[0]
+            lookup_function = lookup_provider_functions.get(provider, None)
+            if lookup_function == None:
+                raise Exception(f"Provider {provider} not supported.")
+            doc = lookup_function(thing_type=thing_type, thing=thing)
     elif short_thing_type in lookup_platform_functions.keys():
         lookup_function = lookup_platform_functions.get(short_thing_type, None)
         if lookup_function == None:
