@@ -148,6 +148,10 @@
   ./tfman d tls_public_key
 }
 
+@test "provider - twingate" {
+  ./tfman r twingate_resource
+}
+
 @test "provider - vault" {
   ./tfman d vault_generic_secret
 }

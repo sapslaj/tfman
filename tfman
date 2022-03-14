@@ -181,6 +181,7 @@ lookup_provider_functions = {
     "tfe": _lookup_provider_official(provider="tfe"),
     "time": _lookup_provider_official(provider="time"),
     "tls": _lookup_provider_official(provider="tls", file_extension=".html.md"),
+    "twingate": _lookup_provider_official_legacy(provider="twingate", subdir="docs", ghorg="Twingate"),
     "vault": _lookup_provider_official(provider="vault", file_extension=".html.md"),
     "vsphere": _lookup_provider_official(provider="vsphere"),
 }
