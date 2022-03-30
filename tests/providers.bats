@@ -40,6 +40,10 @@
   ./tfman r ciscoasa_interface_vlan
 }
 
+@test "provider - cloudflare" {
+  ./tfman r cloudflare_record
+}
+
 @test "provider - cloudinit" {
   ./tfman d cloudinit_config
 }

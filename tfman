@@ -156,6 +156,7 @@ lookup_provider_functions = {
     "azurestack": _lookup_provider_official(provider="azurestack"),
     "boundary": _lookup_provider_official_legacy(provider="boundary", subdir="docs"),
     "ciscoasa": _lookup_provider_official(provider="ciscoasa", ghorg="CiscoDevNet", ghbranch="master"),
+    "cloudflare": _lookup_provider_official(provider="cloudflare", ghorg="cloudflare", ghbranch="master"),
     "cloudinit": _lookup_provider_official(provider="cloudinit", thing_prefix="cloudinit_"),
     "consul": _lookup_provider_official(provider="consul", ghbranch="master"),
     "datadog": _lookup_provider_official_legacy(provider="datadog", ghorg="DataDog", ghbranch="master", subdir="docs"),
