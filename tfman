@@ -181,7 +181,7 @@ lookup_provider_functions = {
     "salesforce": _lookup_provider_tfplugindocs(provider="salesforce"),
     "tfe": _lookup_provider_official_legacy(provider="tfe"),
     "time": _lookup_provider_official_legacy(provider="time"),
-    "tls": _lookup_provider_tfplugindocs(provider="tls", file_extension=".html.md"),
+    "tls": _lookup_provider_tfplugindocs(provider="tls"),
     "twingate": _lookup_provider_tfplugindocs(provider="twingate", ghorg="Twingate"),
     "vault": _lookup_provider_official_legacy(provider="vault", file_extension=".html.md"),
     "vsphere": _lookup_provider_official_legacy(provider="vsphere"),
