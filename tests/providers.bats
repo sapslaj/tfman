@@ -100,6 +100,10 @@
   ./tfman r lacework_policy
 }
 
+@test "provider - launchdarkly" {
+  ./tfman r launchdarkly_project
+}
+
 @test "provider - libvirt" {
   ./tfman r libvirt_domain
 }
