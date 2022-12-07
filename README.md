@@ -4,13 +4,10 @@
 
 ## Installation
 
-sorry for not packaging this up all neatly
+Installation is supported via [pipx](https://pypa.github.io/pipx/).
 
 ```shell
-git clone https://github.com/sapslaj/tfman
-cd tfman
-pip install -r requirements.txt
-ln -s ./tfman ~/.local/bin/tfman
+pipx install git+ssh://git@github.com/sapslaj/tfman.git
 ```
 
 ## Usage
