@@ -42,7 +42,7 @@ def build_url(*parts):
     return f"https://{'/'.join(parts)}"
 
 
-def _lookup_direct(*url_parts: list[str]) -> Callable[[str, str], str]:
+def _lookup_direct(url_parts: list[str]) -> Callable[[], str]:
     def lookup(*_) -> str:
         response = requests.get(build_url(*url_parts))
         response.raise_for_status()
@@ -108,7 +108,7 @@ def _lookup_provider_tfplugindocs(
     return lookup
 
 
-def _lookup_platform(doc_path: str, ghbranch: str = "main", subdir: str = "website/docs") -> Callable[[str, str], str]:
+def _lookup_platform(doc_path: str, ghbranch: str = "main", subdir: str = "website/docs") -> Callable[[str], str]:
     def lookup(thing: str) -> str:
         if not thing:
             thing = "index"
@@ -125,7 +125,7 @@ def _lookup_platform(doc_path: str, ghbranch: str = "main", subdir: str = "websi
 
 
 lookup_special_provider_functions = {
-    "external": _lookup_direct(
+    "external": _lookup_direct([
         "raw.githubusercontent.com",
         "hashicorp",
         "terraform-provider-external",
@@ -133,8 +133,8 @@ lookup_special_provider_functions = {
         "docs",
         "data-sources",
         "external.md",
-    ),
-    "http": _lookup_direct(
+    ]),
+    "http": _lookup_direct([
         "raw.githubusercontent.com",
         "hashicorp",
         "terraform-provider-http",
@@ -142,7 +142,7 @@ lookup_special_provider_functions = {
         "docs",
         "data-sources",
         "http.md",
-    ),
+    ]),
 }
 
 lookup_provider_functions = {
@@ -215,19 +215,19 @@ def main():
     elif short_thing_type in ("d", "r"):
         # Some special cases
         if full_name in lookup_special_provider_functions.keys():
-            lookup_function = lookup_special_provider_functions.get(full_name)
+            lookup_function = lookup_special_provider_functions[full_name]
             doc = lookup_function()
         else:
             provider, thing = re.findall(r"(\w+?)_(.*)", full_name)[0]
             lookup_function = lookup_provider_functions.get(provider, None)
             if lookup_function == None:
                 raise Exception(f"Provider {provider} not supported.")
-            doc = lookup_function(thing_type=thing_type, thing=thing)
+            doc = lookup_function(thing_type, thing)
     elif short_thing_type in lookup_platform_functions.keys():
         lookup_function = lookup_platform_functions.get(short_thing_type, None)
         if lookup_function == None:
             raise Exception(f"Platform type {thing_type} not supported.")
-        doc = lookup_function(thing=full_name)
+        doc = lookup_function(full_name)
     else:
         raise Exception(f"dunno what {thing_type} is")
     md = Markdown(doc)
