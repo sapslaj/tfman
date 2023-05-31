@@ -12,6 +12,10 @@
   ./tfman d archive_file
 }
 
+@test "provider - argocd" {
+  ./tfman r argocd_application
+}
+
 @test "provider - aws" {
   ./tfman r awscc_logs_log_group
 }

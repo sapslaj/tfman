@@ -149,6 +149,7 @@ lookup_provider_functions = {
     "ad": _lookup_provider_tfplugindocs(provider="ad"),
     "alicloud": _lookup_provider_official_legacy(provider="alicloud", ghorg="aliyun", ghbranch="master"),
     "archive": _lookup_provider_tfplugindocs(provider="archive"),
+    "argocd": _lookup_provider_tfplugindocs(provider="argocd", ghorg="oboukili", ghbranch="master"),
     "aws": _lookup_provider_official_legacy(provider="aws"),
     "awscc": _lookup_provider_tfplugindocs(provider="awscc"),
     "azuread": _lookup_provider_tfplugindocs(provider="azuread"),
